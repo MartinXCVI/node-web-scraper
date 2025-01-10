@@ -1,25 +1,39 @@
+/* MODULE IMPORTS */
+// High-level API for automation in Chrome & Firefox
 import puppeteer from 'puppeteer'
+// Enables interacting with the file system
 import fs from 'node:fs'
 
 // Get maxPages and scrapeDetails flag from command-line arguments or environment variables
 const maxPages = process.argv[2] || process.env.MAX_PAGES || 10
 const scrapeDetails = process.argv[3] === 'true' || process.env.SCRAPE_DETAILS === 'true'
 
+/* SCRAPE FUNCTION */
 const scrape = async ()=> {
+  // Launch the browser
   const browser = await puppeteer.launch()
+  // Array to store all the books
   const allBooks = []
+  // Initializing the first page in 1
   let currentPage = 1
 
   try {
+    // Open a new blank page
     const page = await browser.newPage()
 
     while(currentPage <= maxPages) {
+      // Page to scrap
       const url = `https://books.toscrape.com/catalogue/page-${currentPage}.html`
 
       try {
+        // Navigate the page to a URL.
         await page.goto(url)
-        console.log(`Scraping page '${currentPage}'... `)
-
+        console.log(`Scraping page '${currentPage}'... `) // Logging the initialization in the console
+        /* The 'evaluate' method evaluates a function in the 
+          page's context and returns the result.
+          If the function passed to page.evaluate returns a Promise, 
+          the function will wait for the promise to resolve and return its value.
+        */
         const books = await page.evaluate(()=> {
           const bookElements = document.querySelectorAll('.product_pod')
           return Array.from(bookElements).map((book)=> {
@@ -61,6 +75,7 @@ const scrape = async ()=> {
           }
         }
 
+        // Storing the books in the allBooks array
         allBooks.push(...books)
         console.log(`Books on page ${currentPage}: `, books)
       } catch(error) {
@@ -81,4 +96,5 @@ const scrape = async ()=> {
 // End of scrape function
 }
 
+/* INVOKING THE FUNCTION */
 scrape()
